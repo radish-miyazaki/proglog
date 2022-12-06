@@ -1,9 +1,10 @@
 package log
 
 import (
-	"github.com/tysonmote/gommap"
 	"io"
 	"os"
+
+	"github.com/tysonmote/gommap"
 )
 
 const (
@@ -48,6 +49,10 @@ func (i *index) Close() error {
 		return err
 	}
 
+	if err := i.mmap.UnsafeUnmap(); err != nil {
+		return err
+	}
+
 	// 永続化されたファイルをその中にある実際のデータ量まで切り詰めて、ファイルを閉じる
 	if err := i.file.Truncate(int64(i.size)); err != nil {
 		return err
@@ -55,6 +60,7 @@ func (i *index) Close() error {
 	return i.file.Close()
 }
 
+// Read 与えられた相対オフセットをもとに、ストア内の紐づくレコードの位置を返す
 func (i *index) Read(in int64) (out uint32, pos uint64, err error) {
 	// 0の場合は、最初の位置を返す
 	if i.size == 0 {
